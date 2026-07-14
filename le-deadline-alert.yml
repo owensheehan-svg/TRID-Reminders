@@ -1,0 +1,52 @@
+name: LE Deadline Alert
+
+on:
+  schedule:
+    # 13:00 UTC = ~9:00 AM ET. GitHub cron is UTC; no daylight-saving adjust.
+    - cron: "0 13 * * 1-5"   # weekdays
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "Run mode"
+        type: choice
+        default: dry_run
+        options:
+          - dry_run      # log only, send nothing
+          - test         # send REAL emails, all redirected to TEST_EMAIL
+          - live         # send for real to everyone
+      test_email:
+        description: "Where test-mode emails go (only used in test mode)"
+        type: string
+        default: owen.sheehan@multiplymortgage.com
+
+jobs:
+  send-alerts:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Run LE deadline alert
+        env:
+          REDASH_BASE_URL:    https://redash.withmultiply.com
+          REDASH_QUERY_ID:    "335"
+          REDASH_API_KEY:     ${{ secrets.REDASH_API_KEY }}
+          GMAIL_ADDRESS:      ${{ secrets.GMAIL_ADDRESS }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+          CEO_EMAIL:          michael@multiplymortgage.com
+          ADMIN_EMAIL:        owen.sheehan@multiplymortgage.com
+          CEO_MODE:           every
+          # Scheduled runs (no inputs) default to DRY_RUN=true for safety.
+          # Manual runs use the chosen mode below.
+          DRY_RUN:   ${{ github.event_name == 'schedule' && 'true' || (github.event.inputs.mode == 'dry_run' && 'true' || 'false') }}
+          TEST_MODE: ${{ github.event.inputs.mode == 'test' && 'true' || 'false' }}
+          TEST_EMAIL: ${{ github.event.inputs.test_email || 'owen.sheehan@multiplymortgage.com' }}
+        run: python alert.py
