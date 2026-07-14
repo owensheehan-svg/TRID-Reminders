@@ -98,10 +98,10 @@ def loan_line(ln):
 def lo_body(lo_name, loans):
     first = lo_name.split()[0] if lo_name else "there"
     has_pastdue = any(l.get("alert_type") == "past_due" for l in loans)
-    lead = ("One or more of your correspondent loans are PAST their Loan "
+    lead = ("One or more of your loans are PAST their Loan "
             "Estimate deadline with no LE sent date on file:"
             if has_pastdue else
-            "You have a correspondent loan with a Loan Estimate deadline "
+            "You have a loan with a Loan Estimate deadline "
             "tomorrow and no LE sent date on file:")
     lines = [f"Hi {first},", "", lead, ""]
     lines += [loan_line(l) for l in sorted(loans, key=lambda x: x['loannumber'])]
