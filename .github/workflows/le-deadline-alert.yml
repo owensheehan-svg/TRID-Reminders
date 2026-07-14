@@ -46,7 +46,7 @@ jobs:
           CEO_MODE:           every
           # Scheduled runs (no inputs) default to DRY_RUN=true for safety.
           # Manual runs use the chosen mode below.
-          DRY_RUN:   ${{ github.event_name == 'schedule' && 'true' || (github.event.inputs.mode == 'dry_run' && 'true' || 'false') }}
+          DRY_RUN: ${{ github.event.inputs.mode == 'dry_run' && 'true' || 'false' }}
           TEST_MODE: ${{ github.event.inputs.mode == 'test' && 'true' || 'false' }}
           TEST_EMAIL: ${{ github.event.inputs.test_email || 'owen.sheehan@multiplymortgage.com' }}
         run: python alert.py
